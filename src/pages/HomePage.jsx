@@ -15,6 +15,7 @@ function HomePage() {
         Event Feed
       </h1>
       <EventList navigateToEvent={navigateToEvent} />
+      {/* temporary comment to enable git commit */}
     </div>
   );
 }
