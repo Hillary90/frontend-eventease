@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import EventForm from "../components/Events/EventForm";
+import EventForm from "../component/EventForm";
 import { getEventById, updateEvent } from "../api/eventService";
 import { AuthContext } from "../context/AuthContext";
 

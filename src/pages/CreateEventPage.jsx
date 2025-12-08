@@ -5,7 +5,7 @@
 // ------------------------------------------------------------
 
 import { useState, useContext } from "react";
-import EventForm from "../components/Events/EventForm";
+import EventForm from "../component/EventForm";
 import { createEvent } from "../api/eventService";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import EventDetailsCard from '../components/Events/EventDetailsCard';
-import AttendeeListModal from '../components/Events/AttendeeListModal';
-import { getEventById, rsvp, cancelRsvp, getAttendees, getMyBookings, isOrganizer } from '../api/bookingService';
+import EventDetailsCard from '../component/EventDetailsCard';
+import AttendeeListModal from '../component/AttendeeListModal';
+import { rsvp, cancelRsvp, getAttendees, getMyBookings } from '../api/bookingService';
+import { getEventById } from '../api/eventService';
+import { AuthContext } from '../context/AuthContext';
 
 const EventDetailsPage = () => {
   const { id } = useParams();
@@ -14,17 +16,17 @@ const EventDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const userId = localStorage.getItem('userId');
+  const { token, user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [eventData, bookings] = await Promise.all([
           getEventById(id),
-          getMyBookings()
+          getMyBookings(token)
         ]);
         setEvent(eventData);
-        setUserBooked(bookings.some(booking => booking.eventId === id));
+        setUserBooked(bookings.some(booking => String(booking.event_id) === String(id)));
       } catch (err) {
         if (err.message === 'Not authenticated') {
           navigate('/login');
@@ -40,7 +42,7 @@ const EventDetailsPage = () => {
 
   const handleRsvp = async () => {
     try {
-      await rsvp(id);
+      await rsvp(id, token);
       setUserBooked(true);
       
       const updatedEvent = await getEventById(id);
@@ -56,7 +58,7 @@ const EventDetailsPage = () => {
 
   const handleCancelRsvp = async () => {
     try {
-      await cancelRsvp(id);
+      await cancelRsvp(id, token);
       setUserBooked(false);
       
       const updatedEvent = await getEventById(id);
@@ -72,7 +74,7 @@ const EventDetailsPage = () => {
 
   const handleViewAttendees = async () => {
     try {
-      const attendeesData = await getAttendees(id);
+      const attendeesData = await getAttendees(id, token);
       setAttendees(attendeesData);
       setShowAttendees(true);
     } catch (err) {
@@ -84,9 +86,14 @@ const EventDetailsPage = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+      if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!event) return <div>Event not found</div>;
+
+  const isOrganizer = (event, user) => {
+    if (!event || !user) return false;
+    return String(event.organizer_id) === String(user.id || user);
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -95,7 +102,7 @@ const EventDetailsPage = () => {
         onRsvp={handleRsvp}
         onCancelRsvp={handleCancelRsvp}
         onViewAttendees={handleViewAttendees}
-        isOrganizer={isOrganizer(event, userId)}
+        isOrganizer={isOrganizer(event, user)}
       />
       {showAttendees && (
         <AttendeeListModal
