@@ -1,29 +1,24 @@
 
-import { API_BASE } from "../config";
+import { API_BASE_URL } from "../config";
 
 // FETCH EVENTS (PUBLIC)
-// Pagination, category & sort supported
 export async function getEvents(page = 1, limit = 6, category = "", sort = "") {
-  const url = new URL(`${API_BASE}/events`);
-  url.searchParams.append("page", page);
-  url.searchParams.append("limit", limit);
-  if (category) url.searchParams.append("category", category);
-  if (sort) url.searchParams.append("sort", sort);
-
-  const response = await fetch(url);
-  return await response.json();
+  // Backend currently returns all events at /events/all. Query params are ignored for now.
+  const res = await fetch(`${API_BASE_URL}/events/all`);
+  const json = await res.json();
+  if (!res.ok) throw { status: res.status, body: json };
+  return json;
 }
 
-// CREATE EVENT (POST)
-// Requires JWT token
+// CREATE EVENT (POST) -> backend uses /events/create
 export async function createEvent(data, token) {
-  const res = await fetch(`${API_BASE}/events/`, {
+  const res = await fetch(`${API_BASE_URL}/events/create`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 
   const json = await res.json();
@@ -31,17 +26,15 @@ export async function createEvent(data, token) {
   return json;
 }
 
-// UPDATE EVENT (PUT)
-// Requires JWT token
-
+// UPDATE EVENT (PUT) -> backend uses /events/update/{id}
 export async function updateEvent(id, data, token) {
-  const res = await fetch(`${API_BASE}/events/${id}`, {
+  const res = await fetch(`${API_BASE_URL}/events/update/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 
   const json = await res.json();
@@ -51,7 +44,7 @@ export async function updateEvent(id, data, token) {
 
 // GET EVENT BY ID (PUBLIC)
 export async function getEventById(id) {
-  const res = await fetch(`${API_BASE}/events/${id}`);
+  const res = await fetch(`${API_BASE_URL}/events/${id}`);
 
   const json = await res.json();
   if (!res.ok) throw { status: res.status, body: json };

@@ -33,15 +33,20 @@ export const loginUser = async (userData) => {
 // supports exchanging it for an app JWT, it'll be handled; otherwise we return
 // a best-effort object with token and simple user info.
 export const loginWithGoogleToken = async (idToken) => {
-  // try exchanging with backend if available
+  // Send the Firebase ID token to the backend using the Authorization header.
+  // Backend has a `GET /auth/me-firebase` endpoint which verifies the token.
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/google`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
+    const res = await fetch(`${API_BASE_URL}/auth/me-firebase`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
     });
     if (!res.ok) throw await handleResponse(res);
-    return handleResponse(res);
+    const data = await handleResponse(res);
+    // return user and token for the app to store
+    return { user: data, token: idToken };
   } catch (err) {
     // fallback: return the firebase idToken as token and minimal user info
     return { user: null, token: idToken };
