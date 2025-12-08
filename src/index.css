@@ -1,1 +1,10 @@
+/* Tailwind v4 import */
 @import "tailwindcss";
+
+/* You can add global styles below */
+html, body, #root {
+	height: 100%;
+}
+body {
+	font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}

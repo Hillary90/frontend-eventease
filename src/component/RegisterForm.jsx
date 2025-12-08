@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { registerUser } from "../../api/authService";
+import { registerUser } from "../api/authService";
 import { useNavigate } from "react-router-dom";
 
 const RegisterForm = () => {
@@ -14,39 +14,47 @@ const RegisterForm = () => {
     e.preventDefault();
     try {
       await registerUser({ name, email, password });
-      navigate("/login"); 
+      navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      console.error("Registration error:", err);
+      setError(err.message || "Registration failed. Please check if the backend server is running.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Register</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <input
-        type="text"
-        placeholder="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button type="submit">Register</button>
-    </form>
+    <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
+      <h2 className="text-xl font-semibold mb-4">Register</h2>
+      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <input
+          className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <div>
+          <button className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" type="submit">Register</button>
+        </div>
+      </form>
+    </div>
   );
 };
 
