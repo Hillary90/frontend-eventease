@@ -9,16 +9,12 @@ function EventList({ navigateToEvent }) {
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("");
 
-  // Load events when category or sort changes
   useEffect(() => {
     loadEvents(1, true);
-    setPage(1); // reset page when filters change
   }, [category, sort]);
 
-  // Load events function
   async function loadEvents(pageNum = 1, reset = false) {
     const data = await getEvents(pageNum, 6, category, sort);
-
     if (reset) {
       setEvents(data);
     } else {
@@ -26,38 +22,27 @@ function EventList({ navigateToEvent }) {
     }
   }
 
-  // Load more handler
-  function handleLoadMore() {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    loadEvents(nextPage);
-  }
-
   return (
     <div>
-      {/* Filters */}
       <EventFilters setCategory={setCategory} setSort={setSort} />
 
-      {/* Event cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {events.length === 0 ? (
           <p className="border p-4 text-center">No events found</p>
         ) : (
           events.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              onClick={navigateToEvent}
-            />
+            <EventCard key={event.id} event={event} onClick={navigateToEvent} />
           ))
         )}
       </div>
 
-      {/* Load more */}
       {events.length > 0 && (
         <button
           className="border p-2 mt-4 block mx-auto"
-          onClick={handleLoadMore}
+          onClick={() => {
+            setPage(page + 1);
+            loadEvents(page + 1);
+          }}
         >
           Load More
         </button>
