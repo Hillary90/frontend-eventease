@@ -34,30 +34,19 @@ export const loginUser = async (userData) => {
 // a best-effort object with token and simple user info.
 export const loginWithGoogleToken = async (idToken) => {
   // Send the Firebase ID token to the backend using the Authorization header.
-  // Exchange the Firebase ID token for a backend JWT, then fetch the DB user.
+  // Backend has a `GET /auth/me-firebase` endpoint which verifies the token.
   try {
-    const exch = await fetch(`${API_BASE_URL}/auth/exchange`, {
-      method: "POST",
+    const res = await fetch(`${API_BASE_URL}/auth/me-firebase`, {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${idToken}`,
         "Content-Type": "application/json",
       },
     });
-    if (!exch.ok) throw await handleResponse(exch);
-    const exchData = await handleResponse(exch);
-    const backendToken = exchData.access_token || exchData.accessToken || exchData.token;
-
-    // Now fetch the user using backend JWT
-    const me = await fetch(`${API_BASE_URL}/auth/me`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${backendToken}`,
-        "Content-Type": "application/json",
-      },
-    });
-    if (!me.ok) throw await handleResponse(me);
-    const user = await handleResponse(me);
-    return { user, token: backendToken };
+    if (!res.ok) throw await handleResponse(res);
+    const data = await handleResponse(res);
+    // return user and token for the app to store
+    return { user: data, token: idToken };
   } catch (err) {
     // If exchange fails, fallback to calling me-firebase (may be available)
     try {
