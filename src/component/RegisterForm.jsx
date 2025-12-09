@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { registerUser } from "../api/authService";
+import { auth, firebaseAvailable } from "../firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { loginWithGoogleToken } from "../api/authService";
 import { useNavigate } from "react-router-dom";
 
 const RegisterForm = () => {
@@ -13,8 +16,17 @@ const RegisterForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await registerUser({ name, email, password });
-      navigate("/login");
+      if (firebaseAvailable) {
+        // Create the user in Firebase, then exchange token with backend to create DB user
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const idToken = await userCred.user.getIdToken();
+        await loginWithGoogleToken(idToken); // re-uses exchange flow to create backend user
+        // After creating the account and exchanging token, send user to login flow
+        navigate("/login");
+      } else {
+        await registerUser({ name, email, password });
+        navigate("/login");
+      }
     } catch (err) {
       console.error("Registration error:", err);
       setError(err.message || "Registration failed. Please check if the backend server is running.");
