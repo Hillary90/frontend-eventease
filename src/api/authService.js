@@ -48,7 +48,17 @@ export const loginWithGoogleToken = async (idToken) => {
     // return user and token for the app to store
     return { user: data, token: idToken };
   } catch (err) {
-    // fallback: return the firebase idToken as token and minimal user info
-    return { user: null, token: idToken };
+    // If exchange fails, fallback to calling me-firebase (may be available)
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/me-firebase`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) throw await handleResponse(res);
+      const data = await handleResponse(res);
+      return { user: data, token: idToken };
+    } catch (e) {
+      return { user: null, token: idToken };
+    }
   }
 };
