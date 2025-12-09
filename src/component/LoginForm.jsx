@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { loginUser, loginWithGoogleToken } from "../api/authService";
 import { auth, googleProvider, firebaseAvailable } from "../firebase";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -16,12 +16,23 @@ const LoginForm = () => {
     e.preventDefault();
     setError(null);
     try {
-      const res = await loginUser({ email, password });
-      // expect res to contain { user, token } or similar
-      const user = res.user || { email };
-      const token = res.token || res?.accessToken || res?.jwt || null;
-      login(user, token);
-      navigate("/");
+      if (firebaseAvailable) {
+        // Sign in with Firebase and exchange for backend JWT
+        const creds = await signInWithEmailAndPassword(auth, email, password);
+        const idToken = await creds.user.getIdToken();
+        const res = await loginWithGoogleToken(idToken);
+        const user = res.user || { email };
+        const token = res.token || idToken;
+        login(user, token);
+        navigate("/");
+      } else {
+        const res = await loginUser({ email, password });
+        // expect res to contain { user, token } or similar
+        const user = res.user || { email };
+        const token = res.token || res?.accessToken || res?.jwt || null;
+        login(user, token);
+        navigate("/");
+      }
     } catch (err) {
       setError(err?.message || err?.error || "Login failed");
     }
