@@ -34,21 +34,42 @@ export const loginUser = async (userData) => {
 // a best-effort object with token and simple user info.
 export const loginWithGoogleToken = async (idToken) => {
   // Send the Firebase ID token to the backend using the Authorization header.
-  // Backend has a `GET /auth/me-firebase` endpoint which verifies the token.
+  // Exchange the Firebase ID token for a backend JWT, then fetch the DB user.
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/me-firebase`, {
-      method: "GET",
+    const exch = await fetch(`${API_BASE_URL}/auth/exchange`, {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${idToken}`,
         "Content-Type": "application/json",
       },
     });
-    if (!res.ok) throw await handleResponse(res);
-    const data = await handleResponse(res);
-    // return user and token for the app to store
-    return { user: data, token: idToken };
+    if (!exch.ok) throw await handleResponse(exch);
+    const exchData = await handleResponse(exch);
+    const backendToken = exchData.access_token || exchData.accessToken || exchData.token;
+
+    // Now fetch the user using backend JWT
+    const me = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${backendToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!me.ok) throw await handleResponse(me);
+    const user = await handleResponse(me);
+    return { user, token: backendToken };
   } catch (err) {
-    // fallback: return the firebase idToken as token and minimal user info
-    return { user: null, token: idToken };
+    // If exchange fails, fallback to calling me-firebase (may be available)
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/me-firebase`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) throw await handleResponse(res);
+      const data = await handleResponse(res);
+      return { user: data, token: idToken };
+    } catch (e) {
+      return { user: null, token: idToken };
+    }
   }
 };
